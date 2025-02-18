@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/binary"
+	// "encoding/hex"
 	"fmt"
 	"log"
 
+	// "binary"
 	"time"
 
 	"github.com/sigurn/crc16"
@@ -60,6 +63,15 @@ func receive_msg(port serial.Port) []byte {
 	}
 
 	// return buffer
+}
+
+func get_result(bytes []byte) int {
+	var res = []byte{}
+	res = append(res, bytes[3])
+	res = append(res, bytes[2])
+	res = append(res, bytes[1])
+	result := int(binary.BigEndian.Uint16(res))
+	return result
 }
 
 func open_serial() serial.Port {
@@ -135,7 +147,7 @@ func reqCheck(port serial.Port) {
 	fmt.Println(answer)
 }
 
-func reqPow1(port serial.Port) {
+func reqPow1(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -155,11 +167,12 @@ func reqPow1(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqPow2(port serial.Port) {
+func reqPow2(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -179,11 +192,12 @@ func reqPow2(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqPow3(port serial.Port) {
+func reqPow3(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -203,11 +217,12 @@ func reqPow3(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqVolt1(port serial.Port) {
+func reqVolt1(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -227,11 +242,12 @@ func reqVolt1(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqVolt2(port serial.Port) {
+func reqVolt2(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -251,11 +267,12 @@ func reqVolt2(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqVolt3(port serial.Port) {
+func reqVolt3(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -275,11 +292,12 @@ func reqVolt3(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqCurr1(port serial.Port) {
+func reqCurr1(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -299,11 +317,12 @@ func reqCurr1(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqCurr2(port serial.Port) {
+func reqCurr2(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -323,11 +342,12 @@ func reqCurr2(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
-	fmt.Println(answer)
+	return get_result(receive_msg(port))
+	// answer := get_result(receive_msg(port))
+	// fmt.Println(answer)
 }
 
-func reqCurr3(port serial.Port) {
+func reqCurr3(port serial.Port) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -347,36 +367,69 @@ func reqCurr3(port serial.Port) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Sent %v bytes\n", n)
-	answer := receive_msg(port)
+	return get_result(receive_msg(port))
+}
+
+func reqFreq(port serial.Port) {
+	// Переменные для составления запроса
+	var req []byte
+	var crc1, crc2 uint8
+	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
+
+	// 4 (+2) байта мощность фазы 1
+	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, 0b00001000) // Код запроса
+	req = append(req, 0b00010001) // Номер параметра
+	req = append(req, 0b01000000) // BWRI запрос
+	crc := crc16.Checksum(req, tab)
+	crc1, crc2 = uint8(crc>>8), uint8(crc&0xff)
+	req = append(req, crc2)
+	req = append(req, crc1)
+	n, err := port.Write(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Sent %v bytes\n", n)
+	answer := get_result(receive_msg(port))
 	fmt.Println(answer)
 }
 
-func requests() {
+func requests() []int {
 	port := open_serial()
+	var results = []int{}
 	time.Sleep(time.Second * 1)
 	open_chanel(port)
+
 	time.Sleep(time.Second * 1)
-	reqPow1(port)
-	time.Sleep(time.Second * 1)
-	reqPow2(port)
-	time.Sleep(time.Second * 1)
-	reqPow3(port)
-	time.Sleep(time.Second * 1)
-	reqVolt1(port)
-	time.Sleep(time.Second * 1)
-	reqVolt2(port)
-	time.Sleep(time.Second * 1)
-	reqVolt3(port)
-	time.Sleep(time.Second * 1)
-	reqCurr1(port)
-	time.Sleep(time.Second * 1)
-	reqCurr2(port)
-	time.Sleep(time.Second * 1)
-	reqCurr3(port)
-	time.Sleep(time.Second * 1)
-	// port.Close()
+	results = append(results, reqPow1(port))
+
+	results = append(results, reqPow2(port))
+
+	results = append(results, reqPow3(port))
+
+	results = append(results, reqVolt1(port))
+
+	results = append(results, reqVolt2(port))
+
+	results = append(results, reqVolt3(port))
+
+	results = append(results, reqCurr1(port))
+
+	results = append(results, reqCurr2(port))
+
+	results = append(results, reqCurr3(port))
+
+	return results
+}
+
+func routine() {
+	for {
+		res := requests()
+		fmt.Println(res)
+		time.Sleep(time.Minute)
+	}
 }
 
 func main() {
-	requests()
+	routine()
 }
