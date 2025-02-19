@@ -2,6 +2,12 @@ package main
 
 import (
 	"encoding/binary"
+	"net/http"
+	"net/url"
+	"strconv"
+
+	// "strings"
+
 	// "encoding/hex"
 	"fmt"
 	"log"
@@ -397,7 +403,6 @@ func reqFreq(port serial.Port) {
 func requests() []int {
 	port := open_serial()
 	var results = []int{}
-	time.Sleep(time.Second * 1)
 	open_chanel(port)
 
 	time.Sleep(time.Second * 1)
@@ -419,17 +424,41 @@ func requests() []int {
 
 	results = append(results, reqCurr3(port))
 
+	port.Close()
+
+	form := url.Values{}
+	form.Add("power1", strconv.Itoa(results[0]))
+	form.Add("power2", strconv.Itoa(results[1]))
+	form.Add("power3", strconv.Itoa(results[2]))
+	form.Add("voltage1", strconv.Itoa(results[3]))
+	form.Add("voltage2", strconv.Itoa(results[4]))
+	form.Add("voltage3", strconv.Itoa(results[5]))
+	form.Add("current1", strconv.Itoa(results[6]))
+	form.Add("current2", strconv.Itoa(results[7]))
+	form.Add("current3", strconv.Itoa(results[8]))
+	form.Add("device", "1")
+	resp, err := http.PostForm("http://127.0.0.1:8000/rec", form)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp)
+
 	return results
 }
 
 func routine() {
-	for {
-		res := requests()
-		fmt.Println(res)
-		time.Sleep(time.Minute)
-	}
+	res := requests()
+	fmt.Println(res)
+	// for {
+	// 	res := requests()
+	// 	fmt.Println(res)
+	// 	time.Sleep(time.Minute * 5)
+	// }
 }
 
 func main() {
-	routine()
+	for {
+		go routine()
+		time.Sleep(time.Minute * 5)
+	}
 }
