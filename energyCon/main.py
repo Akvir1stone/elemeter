@@ -1,11 +1,17 @@
 import datetime
 from typing import Annotated
-from fastapi import FastAPI, status, Form
+
+import fastapi.responses
+from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, status, Form, Request, staticfiles
+from fastapi.templating import Jinja2Templates
 from models import Record, engine
 from sqlmodel import Session, select
 
 
 app = FastAPI()
+app.mount("/static", staticfiles.StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 
 @app.post("/rec", status_code=status.HTTP_201_CREATED)
@@ -37,11 +43,33 @@ async def new_record(power1: Annotated[str, Form()],
 
 
 @app.get("/")
-async def main_page():
+async def main_page(request: Request):
     with Session(engine) as session:
         statement = select(Record)
         results = session.exec(statement)
         resp = []
         for r in results:
             resp.append(r)
-    return resp
+    return templates.TemplateResponse(request=request, context={'resp': resp}, name="base.html")
+
+
+@app.get("/example")
+async def main_page(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
+
+
+@app.get("/chart", response_class=fastapi.responses.HTMLResponse)
+async def get_chart(request: Request):
+    with Session(engine) as session:
+        statement = select(Record)
+        results = session.exec(statement)
+        resp = []
+        for r in results:
+            resp.append(r)
+        # print(jsonable_encoder(resp))
+    return templates.TemplateResponse("chart.html", {"request": request, "json_data": jsonable_encoder(resp)})
+
+
+@app.get("/chart1")
+async def get_e(request: Request):
+    return templates.TemplateResponse("ch.html", {"request": request})
