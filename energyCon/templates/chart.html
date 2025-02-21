@@ -15,7 +15,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
          <script>
             function display_chart(){
-                var json_data = {"jsonarray": {{ json_data }}};
+                var json_data = {{ json_data }};
                 var labels = json_data.jsonarray.map(function(e) {return e.date;});
                 var data = json_data.jsonarray.map(function(e) {return e.voltage1;});
                 const ctx = document.getElementById('myChart');
@@ -39,7 +39,7 @@
 
 <!--    {"jsonarray": {{ json_data }}}-->
     <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
-    <div  class="table-responsive small">
+    <div class="table-responsive small">
         <table class="table table-striped table-sm">
             <thead>
             <TR>

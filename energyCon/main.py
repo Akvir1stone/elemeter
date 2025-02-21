@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import FastAPI, status, Form, Request, staticfiles
 from fastapi.templating import Jinja2Templates
 from models import Record, engine
-from sqlmodel import Session, select
+from sqlmodel import Session, select, cast, Date, DateTime
 
 
 app = FastAPI()
@@ -43,9 +43,15 @@ async def new_record(power1: Annotated[str, Form()],
 
 
 @app.get("/")
-async def main_page(request: Request):
+async def main_page(request: Request, date: datetime.date | None = None):
     with Session(engine) as session:
-        statement = select(Record)
+        date_begin = datetime.datetime.combine(date, datetime.time.min)
+        date_end = date_begin + datetime.timedelta(days=1)
+        # print(date_begin, " < x <", date_end)
+        if date:
+            statement = select(Record).where(Record.date <= date_end).where(Record.date >= date_begin)
+        else:
+            statement = select(Record)
         results = session.exec(statement)
         resp = []
         for r in results:
