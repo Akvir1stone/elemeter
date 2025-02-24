@@ -20,7 +20,21 @@ import (
 )
 
 // Поиск подключенных COM портов
-//
+func search() {
+	ports, err := serial.GetPortsList()
+	if err != nil {
+		log.Fatal(err)
+		fmt.Println("err")
+	}
+	if len(ports) == 0 {
+		log.Fatal("No serial ports found!")
+		fmt.Println("No serial ports found!")
+	}
+	for _, port := range ports {
+		fmt.Printf("Found port: %v\n", port)
+	}
+}
+
 // ports, err := serial.GetPortsList()
 // if err != nil {
 // 	log.Fatal(err)
@@ -72,6 +86,7 @@ func receive_msg(port serial.Port) []byte {
 }
 
 func get_result(bytes []byte) int {
+	fmt.Println(bytes)
 	var res = []byte{}
 	res = append(res, bytes[3])
 	res = append(res, bytes[2])
@@ -89,10 +104,10 @@ func open_serial() serial.Port {
 		// StopBits: serial.OneStopBit,
 	}
 
-	port, err := serial.Open("COM4", port_settings)
+	port, err := serial.Open("COM9", port_settings)
 	if err != nil {
 		log.Fatal(err)
-		fmt.Println("didint opened")
+		fmt.Println("didnt opened")
 	}
 	port.SetReadTimeout(time.Second * 5)
 	return port
@@ -461,4 +476,5 @@ func main() {
 		go routine()
 		time.Sleep(time.Minute * 5)
 	}
+	// search()
 }

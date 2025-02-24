@@ -45,17 +45,28 @@ async def new_record(power1: Annotated[str, Form()],
 @app.get("/")
 async def main_page(request: Request, date: datetime.date | None = None):
     with Session(engine) as session:
-        date_begin = datetime.datetime.combine(date, datetime.time.min)
-        date_end = date_begin + datetime.timedelta(days=1)
         # print(date_begin, " < x <", date_end)
         if date:
+            date_begin = datetime.datetime.combine(date, datetime.time.min)
+            date_end = date_begin + datetime.timedelta(days=1)
             statement = select(Record).where(Record.date <= date_end).where(Record.date >= date_begin)
         else:
             statement = select(Record)
         results = session.exec(statement)
+        # print(results)
+        dt = datetime.datetime.now()
         resp = []
         for r in results:
+            b = str(r.date)[:16]
+            r.date = b
             resp.append(r)
+            # # resp.append(r.date.strftime("%h:%M"))
+            # if type(r.date) == type(dt):
+            #     # resp.append(r.date.strftime("%h:%M"))
+            #     # print(r.strftime("%h:%M"))
+            #     pass
+            # else:
+            #
     return templates.TemplateResponse(request=request, context={'resp': resp}, name="base.html")
 
 
