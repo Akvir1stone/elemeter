@@ -13,23 +13,35 @@
 
 </head>
 <body>
-
-
-    <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
-
+    <canvas class="my-4 w-100" id="myChart" width="900" height="300"></canvas>
     <div>
-        <form action="/{{ date }}">
-            <label for="date">Фильтр по дате:</label>
-            <input type="date" id="date" name="date">
-            <input type="submit">
+        <form action="/{{ date }}{{ device }}" class="col-lg-6 offset-lg-3">
+            <div class="row justify-content-center">
+                <label for="date">Фильтр по дате и выбор счетчика</label>
+            </div>
+            <div class="row align-items-center justify-content-center">
+                <div class="col">
+                    <input type="date" id="date" name="date" class="form-control">
+                </div>
+                <div class="col">
+                    <select name="device" id="device" class="form-select">
+                        <option value="1">Счетчик 1</option>
+                        <option value="2">Счетчик 2</option>
+                        <option value="3">Счетчик 3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row align-items-center justify-content-center">
+                <input type="submit" class="btn btn-primary">
+            </div>
         </form>
     </div>
 
     <div  class="table-responsive small">
-                <script>
-                    const dates = [];
-                    const volts = [];
-                </script>
+        <script>
+            const dates = [];
+            const volts = [];
+        </script>
         <table class="table table-striped table-sm">
             <thead>
             <TR>
@@ -61,7 +73,11 @@
                 <script>
                     st = "{{ r.date|safe }}"
                     dates.push(st.slice(11));
-                    volts.push({{ r.voltage1 }});
+                    if ({{ r.voltage1 }} > 0) {
+                        volts.push({{ r.voltage1 }});
+                    } else {
+                        volts.push(Number.NuN);
+                    }
                 </script>
             </TR>
             {% endfor %}
@@ -69,21 +85,28 @@
         </table>
     </div>
 
+<!--    if (new Date().parse("{{ choosen_date }}".slice(0, 11) == null) {-->
+<!--        document.getElementById('date').valueAsDate = new Date();-->
+<!--    } else {-->
+<!--        document.getElementById('date').valueAsDate = new Date().parse("{{ choosen_date }}".slice(0, 11))-->
+<!--    }-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 <script>
-      var ctx = document.getElementById("myChart");
-      var myChart = new Chart(ctx, {
+    document.getElementById('date').value = "{{ choosen_date }}";
+    document.getElementById('device').value = {{ dev }};
+    var ctx = document.getElementById("myChart");
+    var myChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: dates,
-          datasets: [{
-            data: volts,
-            lineTension: 0,
-            backgroundColor: 'transparent',
-            borderColor: '#007bff',
-            borderWidth: 4,
-            pointBackgroundColor: '#007bff'
-          }]
+            labels: dates,
+            datasets: [{
+                data: volts,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff'
+            }]
         },
         options: {
           scales: {

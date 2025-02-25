@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -95,7 +96,7 @@ func get_result(bytes []byte) int {
 	return result
 }
 
-func open_serial() serial.Port {
+func open_serial(com_port string) serial.Port {
 	// Настройка порта
 	port_settings := &serial.Mode{
 		BaudRate: 9600,
@@ -104,7 +105,7 @@ func open_serial() serial.Port {
 		// StopBits: serial.OneStopBit,
 	}
 
-	port, err := serial.Open("COM9", port_settings)
+	port, err := serial.Open(com_port, port_settings)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Println("didnt opened")
@@ -113,7 +114,7 @@ func open_serial() serial.Port {
 	return port
 }
 
-func open_chanel(port serial.Port) {
+func open_chanel(port serial.Port, trys int) error {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
@@ -141,7 +142,16 @@ func open_chanel(port serial.Port) {
 	fmt.Printf("Sent %v bytes\n", n)
 
 	answer := receive_msg(port)
-	fmt.Println(answer)
+	if trys < 3 && len(answer) < 2 {
+		trys = trys + 1
+		return open_chanel(port, trys)
+	} else {
+		if trys >= 3 {
+			return errors.New("login failed several times, check connection")
+		} else {
+			return nil
+		}
+	}
 }
 
 func reqCheck(port serial.Port) {
@@ -415,60 +425,88 @@ func reqFreq(port serial.Port) {
 	fmt.Println(answer)
 }
 
-func requests() []int {
-	port := open_serial()
-	var results = []int{}
-	open_chanel(port)
+func requests(device int) ([]int, error) {
+	var port serial.Port
+	switch device {
+	case 1:
+		port = open_serial("COM9")
 
-	time.Sleep(time.Second * 1)
-	results = append(results, reqPow1(port))
-
-	results = append(results, reqPow2(port))
-
-	results = append(results, reqPow3(port))
-
-	results = append(results, reqVolt1(port))
-
-	results = append(results, reqVolt2(port))
-
-	results = append(results, reqVolt3(port))
-
-	results = append(results, reqCurr1(port))
-
-	results = append(results, reqCurr2(port))
-
-	results = append(results, reqCurr3(port))
-
-	port.Close()
-
-	form := url.Values{}
-	form.Add("power1", strconv.Itoa(results[0]))
-	form.Add("power2", strconv.Itoa(results[1]))
-	form.Add("power3", strconv.Itoa(results[2]))
-	form.Add("voltage1", strconv.Itoa(results[3]))
-	form.Add("voltage2", strconv.Itoa(results[4]))
-	form.Add("voltage3", strconv.Itoa(results[5]))
-	form.Add("current1", strconv.Itoa(results[6]))
-	form.Add("current2", strconv.Itoa(results[7]))
-	form.Add("current3", strconv.Itoa(results[8]))
-	form.Add("device", "1")
-	resp, err := http.PostForm("http://127.0.0.1:8000/rec", form)
-	if err != nil {
-		log.Fatal(err)
+	case 2:
+		port = open_serial("COM9")
 	}
-	fmt.Println(resp)
+	var results = []int{}
+	err := open_chanel(port, 0)
+	if err != nil {
+		form := url.Values{}
+		form.Add("device", strconv.Itoa(device))
+		resp, err := http.PostForm("http://127.0.0.1:8000/no_connection", form)
+		if err != nil {
+			log.Println(err)
+		}
+		fmt.Println(resp)
+		return nil, err
+	} else {
 
-	return results
+		time.Sleep(time.Second * 1)
+		results = append(results, reqPow1(port))
+
+		results = append(results, reqPow2(port))
+
+		results = append(results, reqPow3(port))
+
+		results = append(results, reqVolt1(port))
+
+		results = append(results, reqVolt2(port))
+
+		results = append(results, reqVolt3(port))
+
+		results = append(results, reqCurr1(port))
+
+		results = append(results, reqCurr2(port))
+
+		results = append(results, reqCurr3(port))
+
+		port.Close()
+
+		form := url.Values{}
+		form.Add("power1", strconv.Itoa(results[0]))
+		form.Add("power2", strconv.Itoa(results[1]))
+		form.Add("power3", strconv.Itoa(results[2]))
+		form.Add("voltage1", strconv.Itoa(results[3]))
+		form.Add("voltage2", strconv.Itoa(results[4]))
+		form.Add("voltage3", strconv.Itoa(results[5]))
+		form.Add("current1", strconv.Itoa(results[6]))
+		form.Add("current2", strconv.Itoa(results[7]))
+		form.Add("current3", strconv.Itoa(results[8]))
+		form.Add("device", strconv.Itoa(device))
+		resp, err := http.PostForm("http://127.0.0.1:8000/rec", form)
+		if err != nil {
+			log.Println(err)
+		}
+		fmt.Println(resp)
+
+		return results, nil
+	}
 }
 
 func routine() {
-	res := requests()
+	res, err := requests(1)
+	if err != nil {
+		log.Println(err)
+	}
 	fmt.Println(res)
-	// for {
-	// 	res := requests()
-	// 	fmt.Println(res)
-	// 	time.Sleep(time.Minute * 5)
+
+	res, err = requests(2)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(res)
+
+	// res, err = requests(3)
+	// if err != nil {
+	// 	log.Println(err)
 	// }
+	// fmt.Println(res)
 }
 
 func main() {

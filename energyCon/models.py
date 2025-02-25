@@ -14,7 +14,7 @@ class Record(SQLModel, table=True):
     current1: int
     current2: int
     current3: int
-    device: int
+    device: int | None = Field(default=1)
     date: datetime.datetime
 
 
