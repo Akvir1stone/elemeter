@@ -17,7 +17,7 @@
     <div>
         <form action="/{{ date }}{{ device }}" class="col-lg-6 offset-lg-3">
             <div class="row justify-content-center">
-                <label for="date">Фильтр по дате и выбор счетчика</label>
+                <label for="date">Выбор даты и счетчика</label>
             </div>
             <div class="row align-items-center justify-content-center">
                 <div class="col">
@@ -32,7 +32,7 @@
                 </div>
             </div>
             <div class="row align-items-center justify-content-center">
-                <input type="submit" class="btn btn-primary">
+                <input type="submit" class="btn btn-primary" value="Показать">
             </div>
         </form>
     </div>
@@ -40,44 +40,56 @@
     <div  class="table-responsive small">
         <script>
             const dates = [];
-            const volts = [];
+            const power1 = [];
+            const power2 = [];
+            const power3 = [];
+            const voltage1 = [];
+            const voltage2 = [];
+            const voltage3 = [];
+            const current1 = [];
+            const current2 = [];
+            const current3 = [];
         </script>
         <table class="table table-striped table-sm">
             <thead>
             <TR>
-                <TD scope="col"><b>power1</b></TD>
-                <TD scope="col"><b>power2</b></TD>
-                <TD scope="col"><b>power3</b></TD>
-                <TD scope="col"><b>voltage1</b></TD>
-                <TD scope="col"><b>voltage2</b></TD>
-                <TD scope="col"><b>voltage3</b></TD>
-                <TD scope="col"><b>current1</b></TD>
-                <TD scope="col"><b>current2</b></TD>
-                <TD scope="col"><b>current3</b></TD>
-                <TD scope="col"><b>date</b></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(0);"><b>Мощность 1</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(1);"><b>Мощность 2</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(2);"><b>Мощность 3</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(3);"><b>Напряжение 1</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(4);"><b>Напряжение 2</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(5);"><b>Напряжение 3</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(6);"><b>Ток 1</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(7);"><b>Ток 2</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_visability(8);"><b>Ток 3</b></button></TD>
+                <TD scope="col" class="text-center"><button class="btn" onclick="data_show();"><b>Дата</b></button></TD>
             </TR>
             </thead>
             <tbody>
             {% for r in resp %}
             <TR>
-                <TD>{{r.power1}}</TD>
-                <TD>{{r.power2}}</TD>
-                <TD>{{r.power3}}</TD>
-                <TD>{{ r.voltage1 }}</TD>
-                <TD>{{r.voltage2}}</TD>
-                <TD>{{r.voltage3}}</TD>
-                <TD>{{r.current1}}</TD>
-                <TD>{{r.current2}}</TD>
-                <TD>{{r.current3}}</TD>
-                <TD>{{ r.date|safe }}</TD>
+                <TD class="text-center">{{r.power1}}</TD>
+                <TD class="text-center">{{r.power2}}</TD>
+                <TD class="text-center">{{r.power3}}</TD>
+                <TD class="text-center">{{r.voltage1}}</TD>
+                <TD class="text-center">{{r.voltage2}}</TD>
+                <TD class="text-center">{{r.voltage3}}</TD>
+                <TD class="text-center">{{r.current1}}</TD>
+                <TD class="text-center">{{r.current2}}</TD>
+                <TD class="text-center">{{r.current3}}</TD>
+                <TD class="text-center">{{r.date|safe}}</TD>
                 <script>
                     st = "{{ r.date|safe }}"
                     dates.push(st.slice(11));
-                    if ({{ r.voltage1 }} > 0) {
-                        volts.push({{ r.voltage1 }});
-                    } else {
-                        volts.push(Number.NuN);
-                    }
+                    if ({{ r.power1 }} > 0) {power1.push({{ r.power1 }});} else {power1.push(Number.NuN);}
+                    if ({{ r.power2 }} > 0) {power2.push({{ r.power2 }});} else {power2.push(Number.NuN);}
+                    if ({{ r.power3 }} > 0) {power3.push({{ r.power3 }});} else {power3.push(Number.NuN);}
+                    if ({{ r.voltage1 }} > 0) {voltage1.push({{ r.voltage1 }});} else {voltage1.push(Number.NuN);}
+                    if ({{ r.voltage2 }} > 0) {voltage2.push({{ r.voltage2 }});} else {voltage2.push(Number.NuN);}
+                    if ({{ r.voltage3 }} > 0) {voltage3.push({{ r.voltage3 }});} else {voltage3.push(Number.NuN);}
+                    if ({{ r.current1 }} > 0) {current1.push({{ r.current1 }});} else {current1.push(Number.NuN);}
+                    if ({{ r.current2 }} > 0) {current2.push({{ r.current2 }});} else {current2.push(Number.NuN);}
+                    if ({{ r.current3 }} > 0) {current3.push({{ r.current3 }});} else {current3.push(Number.NuN);}
                 </script>
             </TR>
             {% endfor %}
@@ -92,7 +104,11 @@
 <!--    }-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 <script>
-    document.getElementById('date').value = "{{ choosen_date }}";
+    if ("{{ choosen_date }}" == "None") {
+        document.getElementById('date').valueAsDate = new Date();
+    } else {
+        document.getElementById('date').value = "{{ choosen_date }}";
+    }
     document.getElementById('device').value = {{ dev }};
     var ctx = document.getElementById("myChart");
     var myChart = new Chart(ctx, {
@@ -100,12 +116,94 @@
         data: {
             labels: dates,
             datasets: [{
-                data: volts,
+                label: "Мощность 1",
+                data: power1,
                 lineTension: 0,
                 backgroundColor: "rgba(110,110,220,0.5)",
                 borderColor: '#007bff',
                 borderWidth: 2,
-                pointBackgroundColor: '#007bff'
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Мощность 2",
+                data: power2,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Мощность 3",
+                data: power3,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Напряжение 1",
+                data: voltage1,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Напряжение 2",
+                data: voltage2,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Напряжение 3",
+                data: voltage3,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Ток 1",
+                data: current1,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Ток 2",
+                data: current2,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
+            },
+            {
+                label: "Ток 3",
+                data: current3,
+                lineTension: 0,
+                backgroundColor: "rgba(110,110,220,0.5)",
+                borderColor: '#007bff',
+                borderWidth: 2,
+                pointBackgroundColor: '#007bff',
+                hidden: false,
             }]
         },
         options: {
@@ -121,7 +219,17 @@
           }
         }
       });
+      function data_visability(n) {myChart.data.datasets[0].hidden = true;myChart.data.datasets[1].hidden = true;myChart.data.datasets[2].hidden = true;
+      myChart.data.datasets[3].hidden = true;myChart.data.datasets[4].hidden = true;myChart.data.datasets[5].hidden = true;
+      myChart.data.datasets[6].hidden = true;myChart.data.datasets[7].hidden = true;myChart.data.datasets[8].hidden = true;
+      myChart.data.datasets[n].hidden = false;myChart.update();}
+
+      function data_show() {myChart.data.datasets[0].hidden = false;myChart.data.datasets[1].hidden = false;myChart.data.datasets[2].hidden = false;
+      myChart.data.datasets[3].hidden = false;myChart.data.datasets[4].hidden = false;myChart.data.datasets[5].hidden = false;
+      myChart.data.datasets[6].hidden = false;myChart.data.datasets[7].hidden = false;myChart.data.datasets[8].hidden = false;myChart.update();}
     </script>
 
+
+<!--      function data_visability(n) {console.log(myChart.data.datasets[3].hidden = true);myChart.update();}-->
 </body>
 </html>

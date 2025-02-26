@@ -72,12 +72,29 @@ async def main_page(request: Request, device: str | None = "1", date: datetime.d
             date_begin = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
             date_end = date_begin + datetime.timedelta(days=1)
             statement = select(Record).where(Record.date <= date_end).where(Record.date >= date_begin)
-            # statement = select(Record)
         results = session.exec(statement)
         resp = []
         for r in results:
             b = str(r.date)[:16]
             r.date = b
+            b = r.voltage1 / 100
+            r.voltage1 = b
+            b = r.voltage2 / 100
+            r.voltage2 = b
+            b = r.voltage3 / 100
+            r.voltage3 = b
+            b = r.power1 / 100
+            r.power1 = b
+            b = r.power2 / 100
+            r.power2 = b
+            b = r.power3 / 100
+            r.power3 = b
+            b = r.current1 / 100
+            r.current1 = b
+            b = r.current2 / 100
+            r.current2 = b
+            b = r.current3 / 100
+            r.current3 = b
             resp.append(r)
     return templates.TemplateResponse(request=request, context={'resp': resp, 'dev': device, 'choosen_date': date}, name="base.html")
 
