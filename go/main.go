@@ -3,17 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	// "strings"
-
-	// "encoding/hex"
-	"fmt"
-	"log"
-
-	// "binary"
 	"time"
 
 	"github.com/sigurn/crc16"
@@ -21,32 +15,19 @@ import (
 )
 
 // Поиск подключенных COM портов
-func search() {
-	ports, err := serial.GetPortsList()
-	if err != nil {
-		log.Fatal(err)
-		fmt.Println("err")
-	}
-	if len(ports) == 0 {
-		log.Fatal("No serial ports found!")
-		fmt.Println("No serial ports found!")
-	}
-	for _, port := range ports {
-		fmt.Printf("Found port: %v\n", port)
-	}
-}
-
-// ports, err := serial.GetPortsList()
-// if err != nil {
-// 	log.Fatal(err)
-// 	fmt.Println("err")
-// }
-// if len(ports) == 0 {
-// 	log.Fatal("No serial ports found!")
-// 	fmt.Println("No serial ports found!")
-// }
-// for _, port := range ports {
-// 	fmt.Printf("Found port: %v\n", port)
+// func search() {
+// 	ports, err := serial.GetPortsList()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 		fmt.Println("err")
+// 	}
+// 	if len(ports) == 0 {
+// 		log.Fatal("No serial ports found!")
+// 		fmt.Println("No serial ports found!")
+// 	}
+// 	for _, port := range ports {
+// 		fmt.Printf("Found port: %v\n", port)
+// 	}
 // }
 
 func checkcrc(arr []byte) bool {
@@ -114,14 +95,14 @@ func open_serial(com_port string) serial.Port {
 	return port
 }
 
-func open_chanel(port serial.Port, trys int) error {
+func open_chanel(port serial.Port, trys int, adr byte) error {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// Открыть канал связи
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00000001) // Код запроса
 	req = append(req, 0b00000001) // Уровень доступа
 	req = append(req, 0b00000001) // Пароль 6 байт
@@ -144,7 +125,7 @@ func open_chanel(port serial.Port, trys int) error {
 	answer := receive_msg(port)
 	if trys < 3 && len(answer) < 2 {
 		trys = trys + 1
-		return open_chanel(port, trys)
+		return open_chanel(port, trys, adr)
 	} else {
 		if trys >= 3 {
 			return errors.New("login failed several times, check connection")
@@ -154,38 +135,38 @@ func open_chanel(port serial.Port, trys int) error {
 	}
 }
 
-func reqCheck(port serial.Port) {
-	// Переменные для составления запроса
-	var req []byte
-	var crc1, crc2 uint8
-	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
+// func reqCheck(port serial.Port, adr byte) {
+// 	// Переменные для составления запроса
+// 	var req []byte
+// 	var crc1, crc2 uint8
+// 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
-	// Открыть канал связи
-	req = append(req, 0b01000100) // Сетевой адрес
-	req = append(req, 0b00000000) // Код запроса
-	crc := crc16.Checksum(req, tab)
-	crc1, crc2 = uint8(crc>>8), uint8(crc&0xff)
-	req = append(req, crc2)
-	req = append(req, crc1)
+// 	// Открыть канал связи
+// 	req = append(req, adr)        // Сетевой адрес
+// 	req = append(req, 0b00000000) // Код запроса
+// 	crc := crc16.Checksum(req, tab)
+// 	crc1, crc2 = uint8(crc>>8), uint8(crc&0xff)
+// 	req = append(req, crc2)
+// 	req = append(req, crc1)
 
-	n, err := port.Write(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Sent %v bytes\n", n)
+// 	n, err := port.Write(req)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Printf("Sent %v bytes\n", n)
 
-	answer := receive_msg(port)
-	fmt.Println(answer)
-}
+// 	answer := receive_msg(port)
+// 	fmt.Println(answer)
+// }
 
-func reqPow1(port serial.Port) int {
+func reqPow1(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00001001) // BWRI запрос
@@ -203,14 +184,14 @@ func reqPow1(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqPow2(port serial.Port) int {
+func reqPow2(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00001010) // BWRI запрос
@@ -228,14 +209,14 @@ func reqPow2(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqPow3(port serial.Port) int {
+func reqPow3(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00001011) // BWRI запрос
@@ -253,14 +234,14 @@ func reqPow3(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqVolt1(port serial.Port) int {
+func reqVolt1(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00010001) // BWRI запрос
@@ -278,14 +259,14 @@ func reqVolt1(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqVolt2(port serial.Port) int {
+func reqVolt2(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00010010) // BWRI запрос
@@ -303,14 +284,14 @@ func reqVolt2(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqVolt3(port serial.Port) int {
+func reqVolt3(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00010011) // BWRI запрос
@@ -328,14 +309,14 @@ func reqVolt3(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqCurr1(port serial.Port) int {
+func reqCurr1(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00100001) // BWRI запрос
@@ -353,14 +334,14 @@ func reqCurr1(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqCurr2(port serial.Port) int {
+func reqCurr2(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00100010) // BWRI запрос
@@ -378,14 +359,14 @@ func reqCurr2(port serial.Port) int {
 	// fmt.Println(answer)
 }
 
-func reqCurr3(port serial.Port) int {
+func reqCurr3(port serial.Port, adr byte) int {
 	// Переменные для составления запроса
 	var req []byte
 	var crc1, crc2 uint8
 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
 	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
+	req = append(req, adr)        // Сетевой адрес
 	req = append(req, 0b00001000) // Код запроса
 	req = append(req, 0b00010001) // Номер параметра
 	req = append(req, 0b00100011) // BWRI запрос
@@ -401,41 +382,48 @@ func reqCurr3(port serial.Port) int {
 	return get_result(receive_msg(port))
 }
 
-func reqFreq(port serial.Port) {
-	// Переменные для составления запроса
-	var req []byte
-	var crc1, crc2 uint8
-	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
+// func reqFreq(port serial.Port, adr byte) {
+// 	// Переменные для составления запроса
+// 	var req []byte
+// 	var crc1, crc2 uint8
+// 	tab := crc16.MakeTable(crc16.CRC16_MODBUS)
 
-	// 4 (+2) байта мощность фазы 1
-	req = append(req, 0b01000100) // Сетевой адрес
-	req = append(req, 0b00001000) // Код запроса
-	req = append(req, 0b00010001) // Номер параметра
-	req = append(req, 0b01000000) // BWRI запрос
-	crc := crc16.Checksum(req, tab)
-	crc1, crc2 = uint8(crc>>8), uint8(crc&0xff)
-	req = append(req, crc2)
-	req = append(req, crc1)
-	n, err := port.Write(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Sent %v bytes\n", n)
-	answer := get_result(receive_msg(port))
-	fmt.Println(answer)
-}
+// 	// 4 (+2) байта мощность фазы 1
+// 	req = append(req, adr)        // Сетевой адрес
+// 	req = append(req, 0b00001000) // Код запроса
+// 	req = append(req, 0b00010001) // Номер параметра
+// 	req = append(req, 0b01000000) // BWRI запрос
+// 	crc := crc16.Checksum(req, tab)
+// 	crc1, crc2 = uint8(crc>>8), uint8(crc&0xff)
+// 	req = append(req, crc2)
+// 	req = append(req, crc1)
+// 	n, err := port.Write(req)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Printf("Sent %v bytes\n", n)
+// 	answer := get_result(receive_msg(port))
+// 	fmt.Println(answer)
+// }
 
+// Данные счетчиков тут
+// Название ком порта и сетевой адрес счетчика
 func requests(device int) ([]int, error) {
 	var port serial.Port
+	var adr byte
+	// Данные счетчиков
+	// Название ком порта и сетевой адрес счетчика
 	switch device {
 	case 1:
 		port = open_serial("COM9")
+		adr = 0b01000100
 
 	case 2:
 		port = open_serial("COM9")
+		adr = 0b01000100
 	}
 	var results = []int{}
-	err := open_chanel(port, 0)
+	err := open_chanel(port, 0, adr)
 	if err != nil {
 		form := url.Values{}
 		form.Add("device", strconv.Itoa(device))
@@ -448,23 +436,23 @@ func requests(device int) ([]int, error) {
 	} else {
 
 		time.Sleep(time.Second * 1)
-		results = append(results, reqPow1(port))
+		results = append(results, reqPow1(port, adr))
 
-		results = append(results, reqPow2(port))
+		results = append(results, reqPow2(port, adr))
 
-		results = append(results, reqPow3(port))
+		results = append(results, reqPow3(port, adr))
 
-		results = append(results, reqVolt1(port))
+		results = append(results, reqVolt1(port, adr))
 
-		results = append(results, reqVolt2(port))
+		results = append(results, reqVolt2(port, adr))
 
-		results = append(results, reqVolt3(port))
+		results = append(results, reqVolt3(port, adr))
 
-		results = append(results, reqCurr1(port))
+		results = append(results, reqCurr1(port, adr))
 
-		results = append(results, reqCurr2(port))
+		results = append(results, reqCurr2(port, adr))
 
-		results = append(results, reqCurr3(port))
+		results = append(results, reqCurr3(port, adr))
 
 		port.Close()
 

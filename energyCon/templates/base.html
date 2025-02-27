@@ -6,8 +6,6 @@
         <meta name="description" content="" />
         <meta name="author" content="" />
         <title>Bare - Start Bootstrap Template</title>
-        <!-- Favicon-->
-<!--        <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />-->
         <!-- Core theme CSS (includes Bootstrap)-->
         <link rel="stylesheet" href="static/css/styles.css" />
 
@@ -97,11 +95,6 @@
         </table>
     </div>
 
-<!--    if (new Date().parse("{{ choosen_date }}".slice(0, 11) == null) {-->
-<!--        document.getElementById('date').valueAsDate = new Date();-->
-<!--    } else {-->
-<!--        document.getElementById('date').valueAsDate = new Date().parse("{{ choosen_date }}".slice(0, 11))-->
-<!--    }-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 <script>
     if ("{{ choosen_date }}" == "None") {
@@ -228,8 +221,5 @@
       myChart.data.datasets[3].hidden = false;myChart.data.datasets[4].hidden = false;myChart.data.datasets[5].hidden = false;
       myChart.data.datasets[6].hidden = false;myChart.data.datasets[7].hidden = false;myChart.data.datasets[8].hidden = false;myChart.update();}
     </script>
-
-
-<!--      function data_visability(n) {console.log(myChart.data.datasets[3].hidden = true);myChart.update();}-->
 </body>
 </html>
