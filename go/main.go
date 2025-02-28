@@ -467,8 +467,6 @@ func requests(device int) ([]int, error) {
 		form.Add("current2", strconv.Itoa(results[7]))
 		form.Add("current3", strconv.Itoa(results[8]))
 		form.Add("device", strconv.Itoa(device))
-
-		fmt.Println(form)
 		resp, err := http.PostForm("http://127.0.0.1:8000/rec", form)
 		if err != nil {
 			log.Println(err)

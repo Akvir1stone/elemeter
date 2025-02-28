@@ -2,7 +2,7 @@ import datetime
 from typing import Union
 from sqlmodel import Field, SQLModel, create_engine
 
-# a = 9
+
 class Record(SQLModel, table=True):
     id: Union[int, None] = Field(default=None, primary_key=True)
     power1: int
